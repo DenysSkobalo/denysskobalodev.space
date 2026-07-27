@@ -8,7 +8,8 @@
     {
       "binding": "DB",
       "database_name": "denysskobalodev-db",
-      "database_id": "211757ad-573b-4228-9e57-01beef45c671"
+      "database_id": "211757ad-573b-4228-9e57-01beef45c671",
+	  "migrations_dir": "../../packages/db/migrations"
     }
   ],
   "kv_namespaces": [
