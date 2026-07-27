@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build & Bundler Outputs
+dist/
+.astro/
+.turbo/
+.out/
+.wrangler/
+
+# Cloudflare & Wrangler Emulators
+.dev.vars
+*.sqlite
+.mf/
+
+# Environment Variables & Local Secrets
+.env
+.env.*
+!.env.example
+
+# OS & Editor Artifacts
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+.idea/
+*.log
