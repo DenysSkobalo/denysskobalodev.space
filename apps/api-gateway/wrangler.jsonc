@@ -1,0 +1,40 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "api-gateway",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "denysskobalodev-db",
+      "database_id": "211757ad-573b-4228-9e57-01beef45c671"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CACHE_KV",
+      "id": "152a9f347bee4303aae5f56df4712f8e"
+    },
+    {
+      "binding": "RATE_LIMIT_KV",
+      "id": "458b3c5c81864b42af16a68b0bf48190"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA_BUCKET",
+      "bucket_name": "denysskobalodev-assets"
+    }
+  ],
+  "env": {
+    "production": {
+      "routes": [
+        {
+          "pattern": "api.denysskobalodev.space/*",
+          "zone_name": "denysskobalodev.space"
+        }
+      ]
+    }
+  }
+}
