@@ -5,17 +5,17 @@
   "compatibility_date": "2026-07-27",
   "compatibility_flags": ["nodejs_compat"],
   "routes": [
-	  {
-		"pattern": "api.denysskobalodev.space/*",
-		"zone_name": "denysskobalodev.space"
-	  }
+    {
+      "pattern": "api.denysskobalodev.space/*",
+      "zone_name": "denysskobalodev.space"
+    }
   ],
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "denysskobalodev-db",
       "database_id": "211757ad-573b-4228-9e57-01beef45c671",
-	  "migrations_dir": "../../packages/db/migrations"
+      "migrations_dir": "../../packages/db/migrations"
     }
   ],
   "kv_namespaces": [
@@ -33,15 +33,5 @@
       "binding": "MEDIA_BUCKET",
       "bucket_name": "denysskobalodev-assets"
     }
-  ],
-  "env": {
-    "production": {
-      "routes": [
-        {
-          "pattern": "api.denysskobalodev.space/*",
-          "zone_name": "denysskobalodev.space"
-        }
-      ]
-    }
-  }
+  ]
 }

@@ -7,7 +7,8 @@
   "scripts": {
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply denysskobalodev-db --local --config ../../apps/api-gateway/wrangler.jsonc",
-    "db:migrate:prod": "wrangler d1 migrations apply denysskobalodev-db --remote --config ../../apps/api-gateway/wrangler.jsonc"
+    "db:migrate:prod": "wrangler d1 migrations apply denysskobalodev-db --remote --config ../../apps/api-gateway/wrangler.jsonc",
+	"check-types": "tsc --noEmit"
   },
   "dependencies": {
     "drizzle-orm": "^0.32.0"
