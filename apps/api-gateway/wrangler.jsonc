@@ -4,6 +4,12 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-07-27",
   "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+	  {
+		"pattern": "api.denysskobalodev.space/*",
+		"zone_name": "denysskobalodev.space"
+	  }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
