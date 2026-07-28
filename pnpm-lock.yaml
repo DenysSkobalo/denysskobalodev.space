@@ -18,20 +18,47 @@ importers:
         specifier: ^5.5.0
         version: 5.9.3
 
+  apps/api-gateway:
+    dependencies:
+      '@denysskobalo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@hono/zod-openapi':
+        specifier: ^0.14.0
+        version: 0.14.9(hono@4.12.32)(zod@3.22.3)
+      hono:
+        specifier: ^4.4.0
+        version: 4.12.32
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240605.0
+        version: 4.20260702.1
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      wrangler:
+        specifier: ^3.114.0
+        version: 3.114.17(@cloudflare/workers-types@4.20260702.1)
+
   packages/db:
     dependencies:
       drizzle-orm:
         specifier: ^0.32.0
-        version: 0.32.2
+        version: 0.32.2(@cloudflare/workers-types@4.20260702.1)
     devDependencies:
       drizzle-kit:
         specifier: ^0.23.0
         version: 0.23.2
       wrangler:
         specifier: ^3.67.0
-        version: 3.114.17
+        version: 3.114.17(@cloudflare/workers-types@4.20260702.1)
 
 packages:
+
+  '@asteasolutions/zod-to-openapi@7.3.4':
+    resolution: {integrity: sha512-/2rThQ5zPi9OzVwes6U7lK1+Yvug0iXu25olp7S0XsYmOqnyMfxH7gdSQjn/+DSOHRg7wnotwGJSyL+fBKdnEA==}
+    peerDependencies:
+      zod: ^3.20.2
 
   '@cloudflare/kv-asset-handler@0.3.4':
     resolution: {integrity: sha512-YLPHc8yASwjNkmcDMQMY35yiWjoKAKnhUbPRszBRS0YgH+IXtsMp61j+yTcnCE3oO2DgP0U3iejLC8FTtKDC8Q==}
@@ -75,6 +102,9 @@ packages:
     engines: {node: '>=16'}
     cpu: [x64]
     os: [win32]
+
+  '@cloudflare/workers-types@4.20260702.1':
+    resolution: {integrity: sha512-mOhf5TUEB1m2vPrxtqoIGfz0fUC9xyxRDx5gWHy5s+OCo6dcV+g7wI1R7gYCMFohhqF/2y2xeKVwMwCJjfn/WA==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -510,6 +540,19 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
+  '@hono/zod-openapi@0.14.9':
+    resolution: {integrity: sha512-7qWxZiSG4CogPb00TKorPMb2YsniOI0AReFrR7nIvsIdZ5XeorIQtFTI7G+o7HaaKPyzSPqcRllkFnQIIqxCMQ==}
+    engines: {node: '>=16.0.0'}
+    peerDependencies:
+      hono: '>=4.3.6'
+      zod: 3.*
+
+  '@hono/zod-validator@0.2.2':
+    resolution: {integrity: sha512-dSDxaPV70Py8wuIU2QNpoVEIOSzSXZ/6/B/h4xA7eOMz7+AarKTSGV8E6QwrdcCbBLkpqfJ4Q2TmBO0eP1tCBQ==}
+    peerDependencies:
+      hono: '>=3.9.0'
+      zod: ^3.19.1
+
   '@img/sharp-darwin-arm64@0.33.5':
     resolution: {integrity: sha512-UT4p+iz/2H4twwAoLCqfA9UH5pI6DggwKEGuaPy7nCVQ8ZsiY5PIcrRvD1DzuY3qYL07NtIQcWnBSY/heikIFQ==}
     engines: {node: ^18.17.0 || ^20.3.0 || >=21.0.0}
@@ -851,6 +894,10 @@ packages:
   glob-to-regexp@0.4.1:
     resolution: {integrity: sha512-lkX1HJXwyMcprw/5YUZc2s7DrpAiHB21/V+E1rHUrVNokkvB6bqMzT0VfV6/86ZNabt1k14YOIaT7nDvOX3Iiw==}
 
+  hono@4.12.32:
+    resolution: {integrity: sha512-XcuyW9qE2kJn07PkecMOBd5Vq/hMy7mmGw+idz1yblbg9N17ijJODrvPkn7/dwL3Kulj8LcRJ69DLOWf91dRUg==}
+    engines: {node: '>=16.9.0'}
+
   is-arrayish@0.3.4:
     resolution: {integrity: sha512-m6UrgzFVUYawGBh1dUsWR5M2Clqic9RVXC/9f8ceNlv2IcO9j9J/z8UoCLPqtsPBFNzEpfR3xftohbfqDx8EQA==}
 
@@ -876,6 +923,9 @@ packages:
 
   ohash@2.0.11:
     resolution: {integrity: sha512-RdR9FQrFwNBNXAr4GixM8YaRZRJ5PUWbKYbE5eOsrwAjJW0q2REGcf79oYPsLyskQCZG1PLN+S/K1V00joZAoQ==}
+
+  openapi3-ts@4.6.0:
+    resolution: {integrity: sha512-a4sfn6L2sIShhtzJqmjGrARvxAW/3F2BJDdyRVvNF9VhAsZSh5hSyI3a9TNvmzBxXmq66nY5LNT5bQcBxYAZZg==}
 
   path-to-regexp@6.3.0:
     resolution: {integrity: sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==}
@@ -983,6 +1033,11 @@ packages:
       utf-8-validate:
         optional: true
 
+  yaml@2.9.0:
+    resolution: {integrity: sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
   youch@3.3.4:
     resolution: {integrity: sha512-UeVBXie8cA35DS6+nBkls68xaBBXCye0CNznrhszZjTbRVnJKQuNsyLKBTTL4ln1o1rh2PKtv35twV7irj5SEg==}
 
@@ -990,6 +1045,11 @@ packages:
     resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
 
 snapshots:
+
+  '@asteasolutions/zod-to-openapi@7.3.4(zod@3.22.3)':
+    dependencies:
+      openapi3-ts: 4.6.0
+      zod: 3.22.3
 
   '@cloudflare/kv-asset-handler@0.3.4':
     dependencies:
@@ -1015,6 +1075,8 @@ snapshots:
 
   '@cloudflare/workerd-windows-64@1.20250718.0':
     optional: true
+
+  '@cloudflare/workers-types@4.20260702.1': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -1250,6 +1312,18 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
+  '@hono/zod-openapi@0.14.9(hono@4.12.32)(zod@3.22.3)':
+    dependencies:
+      '@asteasolutions/zod-to-openapi': 7.3.4(zod@3.22.3)
+      '@hono/zod-validator': 0.2.2(hono@4.12.32)(zod@3.22.3)
+      hono: 4.12.32
+      zod: 3.22.3
+
+  '@hono/zod-validator@0.2.2(hono@4.12.32)(zod@3.22.3)':
+    dependencies:
+      hono: 4.12.32
+      zod: 3.22.3
+
   '@img/sharp-darwin-arm64@0.33.5':
     optionalDependencies:
       '@img/sharp-libvips-darwin-arm64': 1.0.4
@@ -1406,7 +1480,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.32.2: {}
+  drizzle-orm@0.32.2(@cloudflare/workers-types@4.20260702.1):
+    optionalDependencies:
+      '@cloudflare/workers-types': 4.20260702.1
 
   esbuild-register@3.6.0(esbuild@0.19.12):
     dependencies:
@@ -1513,6 +1589,8 @@ snapshots:
 
   glob-to-regexp@0.4.1: {}
 
+  hono@4.12.32: {}
+
   is-arrayish@0.3.4:
     optional: true
 
@@ -1544,6 +1622,10 @@ snapshots:
   mustache@4.2.0: {}
 
   ohash@2.0.11: {}
+
+  openapi3-ts@4.6.0:
+    dependencies:
+      yaml: 2.9.0
 
   path-to-regexp@6.3.0: {}
 
@@ -1656,7 +1738,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20250718.0
       '@cloudflare/workerd-windows-64': 1.20250718.0
 
-  wrangler@3.114.17:
+  wrangler@3.114.17(@cloudflare/workers-types@4.20260702.1):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.3.4
       '@cloudflare/unenv-preset': 2.0.2(unenv@2.0.0-rc.14)(workerd@1.20250718.0)
@@ -1669,6 +1751,7 @@ snapshots:
       unenv: 2.0.0-rc.14
       workerd: 1.20250718.0
     optionalDependencies:
+      '@cloudflare/workers-types': 4.20260702.1
       fsevents: 2.3.3
       sharp: 0.33.5
     transitivePeerDependencies:
@@ -1676,6 +1759,8 @@ snapshots:
       - utf-8-validate
 
   ws@8.18.0: {}
+
+  yaml@2.9.0: {}
 
   youch@3.3.4:
     dependencies:
