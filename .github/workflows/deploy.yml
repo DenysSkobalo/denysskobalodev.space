@@ -38,4 +38,6 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: "apps/api-gateway"
-          command: deploy --env production
+          wranglerVersion: "4"
+          packageManager: "pnpm"
+          command: deploy 
