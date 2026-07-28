@@ -6,7 +6,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "routes": [
     {
-      "pattern": "api.denysskobalodev.space/*",
+      "pattern": "api.denysskobalodev.space",
 	  "custom_domain": true
     }
   ],
