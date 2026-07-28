@@ -7,7 +7,7 @@
   "routes": [
     {
       "pattern": "api.denysskobalodev.space/*",
-      "zone_name": "denysskobalodev.space"
+	  "custom_domain": true
     }
   ],
   "d1_databases": [
