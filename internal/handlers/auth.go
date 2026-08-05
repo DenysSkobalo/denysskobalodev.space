@@ -38,8 +38,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	adminHash, _ := r.Context().Value(contextKey("ADMIN_HASH")).(string)
-	salt, ok := r.Context().Value(contextKey("SALT")).(string)
-	if !ok || salt == "" {
+	if adminHash == "" {
+		adminHash = h.AdminHash
+	}
+
+	salt, _ := r.Context().Value(contextKey("SALT")).(string)
+	if salt == "" {
 		salt = h.Salt
 	}
 
@@ -52,14 +56,16 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	computedHash := pbkdf2.Key([]byte(req.Password), []byte(salt), 100000, 32, sha256.New)
 	computedHex := hex.EncodeToString(computedHash)
 
-	// Timing Attack Safe
+	// Timing Attack Protection
 	if req.Username != "admin" || subtle.ConstantTimeCompare([]byte(computedHex), []byte(adminHash)) != 1 {
 		respondError(w, http.StatusUnauthorized, "INVALID_CREDENTIALS", "Invalid username or password")
 		return
 	}
 
 	sessionID := generateCryptoToken()
-	_ = h.KVStore.Put("session:"+sessionID, `{"user":"admin","role":"administrator"}`, 86400)
+	if h.KVStore != nil {
+		_ = h.KVStore.Put("session:"+sessionID, `{"user":"admin","role":"administrator"}`, 86400)
+	}
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "admin_session",

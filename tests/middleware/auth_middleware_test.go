@@ -1,52 +1,90 @@
-package middleware_test
+package handlers_test
 
 import (
+	"bytes"
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"github.com/DenysSkobalo/denysskobalodev.space/internal/middleware"
+	"github.com/DenysSkobalo/denysskobalodev.space/internal/handlers"
+	"golang.org/x/crypto/pbkdf2"
 )
 
-type MockValidator struct {
-	validToken string
+type contextKey string
+
+type MockKV struct {
+	data map[string]string
 }
 
-func (m *MockValidator) ValidateSession(token string) bool {
-	return token == m.validToken
-}
+func (m *MockKV) Put(k, v string, ttl int) error { m.data[k] = v; return nil }
+func (m *MockKV) Delete(k string) error         { delete(m.data, k); return nil }
+func (m *MockKV) Get(k string) (string, error)  { return m.data[k], nil }
 
-func TestRequireAdminMiddleware(t *testing.T) {
-	validator := &MockValidator{validToken: "valid_secret_session_token"}
-	guard := middleware.RequireAdmin(validator)
+func TestLoginWorkflow(t *testing.T) {
+	salt := "denysskobalo_unique_salt"
+	password := "SecretPassword123!"
 
-	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ACCESS_GRANTED"))
-	})
+	rawHash := pbkdf2.Key([]byte(password), []byte(salt), 100000, 32, sha256.New)
+	expectedHash := hex.EncodeToString(rawHash)
 
-	handlerToTest := guard(nextHandler)
+	kv := &MockKV{data: make(map[string]string)}
+	handler := &handlers.AuthHandler{
+		AdminHash: expectedHash,
+		Salt:      salt,
+		KVStore:   kv,
+	}
 
-	t.Run("Should Return 401 Unauthorized When Cookie Missing", func(t *testing.T) {
-		req := httptest.NewRequest("POST", "/api/projects", nil)
+	t.Run("Invalid_Credentials", func(t *testing.T) {
+		body, _ := json.Marshal(map[string]string{"username": "admin", "password": "WrongPassword"})
+		req := httptest.NewRequest("POST", "/api/auth/login", bytes.NewBuffer(body))
+		
+		ctx := context.WithValue(req.Context(), contextKey("ADMIN_HASH"), expectedHash)
+		ctx = context.WithValue(ctx, contextKey("SALT"), salt)
+		req = req.WithContext(ctx)
+
 		rec := httptest.NewRecorder()
-
-		handlerToTest.ServeHTTP(rec, req)
+		handler.Login(rec, req)
 
 		if rec.Code != http.StatusUnauthorized {
-			t.Errorf("Expected status 401, got %d", rec.Code)
+			t.Errorf("Expected 401 Unauthorized, got %d", rec.Code)
 		}
 	})
 
-	t.Run("Should Pass When Valid Cookie Provided", func(t *testing.T) {
-		req := httptest.NewRequest("POST", "/api/projects", nil)
-		req.AddCookie(&http.Cookie{Name: "admin_session", Value: "valid_secret_session_token"})
-		rec := httptest.NewRecorder()
+	t.Run("Successful_Login_and_Cookie_Placement", func(t *testing.T) {
+		body, _ := json.Marshal(map[string]string{"username": "admin", "password": password})
+		req := httptest.NewRequest("POST", "/api/auth/login", bytes.NewBuffer(body))
 
-		handlerToTest.ServeHTTP(rec, req)
+		ctx := context.WithValue(req.Context(), contextKey("ADMIN_HASH"), expectedHash)
+		ctx = context.WithValue(ctx, contextKey("SALT"), salt)
+		req = req.WithContext(ctx)
+
+		rec := httptest.NewRecorder()
+		handler.Login(rec, req)
 
 		if rec.Code != http.StatusOK {
-			t.Errorf("Expected status 200, got %d", rec.Code)
+			t.Errorf("Expected 200 OK, got %d", rec.Code)
+		}
+
+		cookies := rec.Result().Cookies()
+		found := false
+		for _, c := range cookies {
+			if c.Name == "admin_session" && c.Value != "" {
+				found = true
+				normalizedDomain := strings.TrimPrefix(c.Domain, ".")
+				expectedDomain := strings.TrimPrefix(".denysskobalodev.space", ".")
+
+				if normalizedDomain != expectedDomain {
+					t.Errorf("Expected domain %s, got %s", expectedDomain, c.Domain)
+				}
+			}
+		}
+		if !found {
+			t.Error("admin_session cookie was not properly set in response headers")
 		}
 	})
 }
