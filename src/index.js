@@ -1,19 +1,22 @@
 import './wasm_exec.js';
-import mod from '../build/main.wasm';
+import wasmModule from '../build/main.wasm';
 
-const go = new Go();
-let instance;
+let wasmInstance = null;
 
-async function initWasm() {
-  if (!instance) {
-    instance = await WebAssembly.instantiate(mod, go.importObject);
-    go.run(instance);
-  }
+async function bootstrapWasm() {
+  if (wasmInstance) return wasmInstance;
+
+  const go = new Go();
+  const instance = await WebAssembly.instantiate(wasmModule, go.importObject);
+  go.run(instance);
+  wasmInstance = instance;
+  return wasmInstance;
 }
 
 export default {
   async fetch(request, env, ctx) {
-    await initWasm();
+    await bootstrapWasm();
+    
     return globalThis.handleHttpRequest(request, env, ctx);
   }
 };
