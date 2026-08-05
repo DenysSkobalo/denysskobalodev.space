@@ -1,0 +1,22 @@
+name = "denysskobalo-backend-worker"
+main = "build/index.js" 
+compatibility_date = "2026-08-01"
+compatibility_flags = [ "nodejs_compat" ]
+
+# Unified Cookie Domain Alignment
+[vars]
+ENVIRONMENT = "production"
+ALLOWED_ORIGIN = "https://denysskobalodev.space"
+COOKIE_DOMAIN = ".denysskobalodev.space"
+
+# Cloudflare KV Namespace (Session Store)
+[[kv_namespaces]]
+binding = "SESSION_KV"
+id = "c7a3679d3e0c4e88bf76e694e973faaa"
+
+# Cloudflare D1 Database (Main SQL DB)
+[[d1_databases]]
+binding = "DB"
+database_name = "denysskobalo-db"
+database_id = "211757ad-573b-4228-9e57-01beef45c671"
+migrations_dir = "migrations"
