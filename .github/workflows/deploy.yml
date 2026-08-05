@@ -1,4 +1,4 @@
-name: Deploy Production
+name: Deploy Production Engine
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-and-build:
-    name: Validate & Build Production WASM
+  validate-and-build:
+    name: Build & Verify WASM Payload
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
@@ -21,17 +21,16 @@ jobs:
           go-version: '1.22'
           cache: true
 
-      - name: Run Go Unit & Integration Tests
+      - name: Execute Unit Tests
         run: go test -v -race ./tests/...
 
-      - name: Compile Go WebAssembly Binary
+      - name: Build WebAssembly Target
         run: |
-          mkdir -p build
-          mkdir -p src
+          mkdir -p build src
           curl -sSL "https://raw.githubusercontent.com/golang/go/release-branch.go1.22/misc/wasm/wasm_exec.js" -o src/wasm_exec.js
           GOOS=js GOARCH=wasm go build -ldflags="-s -w" -o build/main.wasm ./cmd/worker/...
 
-      - name: Upload Build Artifact
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: wasm-build
@@ -43,42 +42,42 @@ jobs:
             migrations/
           retention-days: 1
 
-  deploy-production:
-    name: Apply D1 Migrations & Deploy Worker
-    needs: test-and-build
+  deploy-edge:
+    name: Deploy to Cloudflare Network
+    needs: validate-and-build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Download Build Artifact
+      - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
           name: wasm-build
 
-      - name: Setup Node.js 22 Environment
+      - name: Setup Node.js 22 LTS
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - name: Inject Worker Secrets via Wrangler
+      - name: Set Admin Hash Secret in Worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           ADMIN_HASH: ${{ secrets.ADMIN_HASH }}
         run: |
           if [ -n "$ADMIN_HASH" ]; then
-            echo "$ADMIN_HASH" | npx wrangler secret put ADMIN_HASH
+            printf "%s" "$ADMIN_HASH" | npx wrangler secret put ADMIN_HASH
           fi
 
-      - name: Apply D1 Database Migrations (Remote)
+      - name: Apply D1 Database Migrations
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: d1 migrations apply DB --remote
 
-      - name: Deploy Worker Infrastructure to Edge
+      - name: Deploy Worker Engine
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
