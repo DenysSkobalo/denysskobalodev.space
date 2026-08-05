@@ -3,13 +3,13 @@ main = "src/index.js"
 compatibility_date = "2026-08-01"
 compatibility_flags = [ "nodejs_compat" ]
 
-[rules]
+[[rules]]
 type = "CompiledWasm"
 globs = ["**/*.wasm"]
 fallthrough = false
 
 # Unified Cookie Domain Alignment
-[vars]
+[[vars]]
 ENVIRONMENT = "production"
 ALLOWED_ORIGIN = "https://denysskobalodev.space"
 COOKIE_DOMAIN = ".denysskobalodev.space"
