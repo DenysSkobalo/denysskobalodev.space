@@ -9,7 +9,7 @@ on:
 
 jobs:
   test-and-build:
-    name: Validate & Build Production Artifacts
+    name: Validate & Build Production WASM
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
@@ -60,9 +60,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Install Dependencies
-        run: npm ci || npm install
 
       - name: Inject Worker Secrets via Wrangler
         env:
