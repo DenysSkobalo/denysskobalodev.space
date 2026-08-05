@@ -1,4 +1,5 @@
 name: Deploy Production
+
 on:
   push:
     branches:
@@ -6,10 +7,10 @@ on:
 
 jobs:
   test-and-build:
-    name: Test & Build Go Service
+    name: Validate & Build Production Artifacts
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout Source Code
         uses: actions/checkout@v4
 
       - name: Setup Go Runtime
@@ -17,31 +18,46 @@ jobs:
         with:
           go-version: '1.22'
           cache: true
+          cache-dependency-path: backend/go.sum
 
       - name: Run Go Unit Tests
         run: |
           cd backend
-          go test -v -race ./...
+          go test -v -race ./tests/...
 
-      - name: Compile Go Binary / WebAssembly
+      - name: Compile Go WebAssembly Binary
         run: |
+          mkdir -p build
           cd backend
           GOOS=js GOARCH=wasm go build -o ../build/main.wasm ./cmd/server/main.go
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-build
+          path: build/main.wasm
+          retention-days: 1
 
   deploy-production:
     name: Apply D1 Migrations & Deploy Worker
     needs: test-and-build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout Source Code
         uses: actions/checkout@v4
+
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-build
+          path: build
 
       - name: Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Apply D1 Database Migrations
+      - name: Apply D1 Database Migrations (Remote)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
