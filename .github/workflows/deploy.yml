@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - master
   workflow_dispatch:
 
 jobs:
@@ -21,10 +22,10 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
-      - name: Run Go Unit Tests
-        run: go test -v -race ./tests/...
+      - name: Run Go Tests
+        run: go test -v -race ./...
 
-- name: Compile Go WebAssembly Binary & Prepare Edge Runtime
+      - name: Compile Go WebAssembly Binary & Download JS Runtime
         run: |
           mkdir -p build
           mkdir -p src
@@ -35,7 +36,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wasm-build
-          path: build/main.wasm
+          path: |
+            build/main.wasm
+            src/wasm_exec.js
+            src/index.js
           retention-days: 1
 
   deploy-production:
@@ -50,7 +54,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: wasm-build
-          path: build
 
       - name: Setup Node.js Environment
         uses: actions/setup-node@v4
