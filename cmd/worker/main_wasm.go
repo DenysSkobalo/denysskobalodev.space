@@ -3,34 +3,44 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"runtime/debug"
 	"strings"
 	"syscall/js"
 )
+
+type contextKey string
+
+const (
+	AdminHashKey contextKey = "ADMIN_HASH"
+	SaltKey      contextKey = "SALT"
+)
+
+type JSRequestPayload struct {
+	Method string            `json:"method"`
+	URL    string            `json:"url"`
+	Body   string            `json:"body"`
+	Env    map[string]string `json:"env"`
+}
 
 var muxHandler http.Handler
 
 func main() {
 	muxHandler = setupRouter()
-
 	js.Global().Set("handleHttpRequest", js.FuncOf(handleHttpRequest))
-
 	select {}
 }
 
 func handleHttpRequest(this js.Value, args []js.Value) (resp interface{}) {
 	defer func() {
 		if r := recover(); r != nil {
-			errStack := string(debug.Stack())
 			errResp := map[string]interface{}{
 				"status": 500,
 				"body":   fmt.Sprintf(`{"error":"Internal Wasm Panic","details":%q}`, fmt.Sprintf("%v", r)),
 			}
-			_ = errStack
 			respBytes, _ := json.Marshal(errResp)
 			resp = string(respBytes)
 		}
@@ -45,9 +55,25 @@ func handleHttpRequest(this js.Value, args []js.Value) (resp interface{}) {
 	urlStr := jsReq.Get("url").String()
 	bodyStr := jsReq.Get("body").String()
 
-	req := httptest.NewRequest(method, urlStr, strings.NewReader(bodyStr))
-	rec := httptest.NewRecorder()
+	adminHash := ""
+	salt := "denysskobalo_unique_salt"
 
+	if jsEnv := jsReq.Get("env"); !jsEnv.IsUndefined() && !jsEnv.IsNull() {
+		if h := jsEnv.Get("ADMIN_HASH"); !h.IsUndefined() {
+			adminHash = h.String()
+		}
+		if s := jsEnv.Get("SALT"); !s.IsUndefined() {
+			salt = s.String()
+		}
+	}
+
+	req := httptest.NewRequest(method, urlStr, strings.NewReader(bodyStr))
+	
+	ctx := context.WithValue(req.Context(), AdminHashKey, adminHash)
+	ctx = context.WithValue(ctx, SaltKey, salt)
+	req = req.WithContext(ctx)
+
+	rec := httptest.NewRecorder()
 	muxHandler.ServeHTTP(rec, req)
 
 	respMap := map[string]interface{}{

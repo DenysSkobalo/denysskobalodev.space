@@ -23,6 +23,10 @@ export default {
         method: request.method,
         url: request.url,
         body: reqBody,
+        env: {
+          ADMIN_HASH: env.ADMIN_HASH || "",
+          SALT: env.SALT || "denysskobalo_unique_salt"
+        }
       };
 
       const rawResponse = globalThis.handleHttpRequest(reqPayload);
@@ -36,7 +40,7 @@ export default {
         status: parsed.status || 200,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': 'https://denysskobalodev.space',
+          'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || 'https://denysskobalodev.space',
           'Access-Control-Allow-Credentials': 'true',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cookie',
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
