@@ -15,6 +15,24 @@ func (h *ProjectsHandler) List(w http.ResponseWriter, r *http.Request) {
 	lang := r.URL.Query().Get("lang")
 	statusFilter := r.URL.Query().Get("status")
 
+	if h.DB == nil {
+		mockProjects := []map[string]interface{}{
+			{
+				"slug":        "cloudflare-edge-engine",
+				"name":        "Cloudflare Edge Engine",
+				"icon":        "zap",
+				"status":      "published",
+				"tagline":     filterLanguage(map[string]string{"en": "WASM Go Backend Service"}, lang),
+				"description": filterLanguage(map[string]string{"en": "High performance edge backend on Cloudflare Workers"}, lang),
+				"techStack":   []string{"Go", "WebAssembly", "Cloudflare Workers"},
+				"demoUrl":     "https://api.denysskobalodev.space",
+				"githubUrl":   "https://github.com/DenysSkobalo/denysskobalodev.space",
+			},
+		}
+		respondJSON(w, http.StatusOK, mockProjects)
+		return
+	}
+
 	query := "SELECT slug, title, icon, status, tagline, description, tech_stack, demo_url, github_url FROM projects"
 	var args []interface{}
 

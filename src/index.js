@@ -1,30 +1,24 @@
 import './wasm_exec.js';
 import wasmModule from '../build/main.wasm';
 
-const go = new Go();
-let wasmInstancePromise = null;
+let go = new Go();
+let wasmInstance = null;
 
-async function ensureWasmInitialized() {
-  if (!wasmInstancePromise) {
-    wasmInstancePromise = (async () => {
-      const instance = await WebAssembly.instantiate(wasmModule, go.importObject);
-      go.run(instance);
-    })();
+async function initWasm() {
+  if (!wasmInstance || go.exited) {
+    go = new Go();
+    const instance = await WebAssembly.instantiate(wasmModule, go.importObject);
+    wasmInstance = instance;
+    go.run(wasmInstance);
   }
-  await wasmInstancePromise;
 }
 
 export default {
   async fetch(request, env, ctx) {
     try {
-      await ensureWasmInitialized();
-
-      if (typeof globalThis.handleHttpRequest !== 'function') {
-        throw new Error("Wasm runtime initialization failed: handleHttpRequest is not attached to globalThis");
-      }
+      await initWasm();
 
       const reqBody = await request.text();
-
       const reqPayload = {
         method: request.method,
         url: request.url,
@@ -33,7 +27,7 @@ export default {
 
       const rawResponse = globalThis.handleHttpRequest(reqPayload);
       if (!rawResponse) {
-        throw new Error("Go WASM returned empty response");
+        throw new Error("Empty response from WASM execution");
       }
 
       const parsed = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
@@ -42,19 +36,19 @@ export default {
         status: parsed.status || 200,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || 'https://denysskobalodev.space',
+          'Access-Control-Allow-Origin': 'https://denysskobalodev.space',
           'Access-Control-Allow-Credentials': 'true',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cookie',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         },
       });
     } catch (err) {
       return new Response(JSON.stringify({ error: err.message, stack: err.stack }), {
         status: 500,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || 'https://denysskobalodev.space',
-          'Access-Control-Allow-Credentials': 'true'
+          'Access-Control-Allow-Origin': 'https://denysskobalodev.space',
+          'Access-Control-Allow-Credentials': 'true',
         },
       });
     }
