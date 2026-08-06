@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/pbkdf2"
@@ -42,21 +43,22 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		adminHash = h.AdminHash
 	}
 
+	adminHash = strings.TrimSpace(adminHash)
+
 	salt, _ := r.Context().Value(contextKey("SALT")).(string)
 	if salt == "" {
 		salt = h.Salt
 	}
+	salt = strings.TrimSpace(salt)
 
 	if adminHash == "" {
 		respondError(w, http.StatusInternalServerError, "CONFIG_ERROR", "Server misconfiguration: missing admin secret key")
 		return
 	}
 
-	// PBKDF2
 	computedHash := pbkdf2.Key([]byte(req.Password), []byte(salt), 100000, 32, sha256.New)
 	computedHex := hex.EncodeToString(computedHash)
 
-	// Timing Attack Protection
 	if req.Username != "admin" || subtle.ConstantTimeCompare([]byte(computedHex), []byte(adminHash)) != 1 {
 		respondError(w, http.StatusUnauthorized, "INVALID_CREDENTIALS", "Invalid username or password")
 		return
