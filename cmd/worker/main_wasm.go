@@ -64,6 +64,15 @@ func handleHttpRequest(this js.Value, args []js.Value) (resp any) {
 
 	req := httptest.NewRequest(method, urlStr, strings.NewReader(bodyStr))
 
+	if jsHeaders := jsReq.Get("headers"); !jsHeaders.IsUndefined() && !jsHeaders.IsNull() {
+		var headers map[string]string
+		if err := json.Unmarshal([]byte(jsHeaders.String()), &headers); err == nil {
+			for key, val := range headers {
+				req.Header.Set(key, val)
+			}
+		}
+	}
+
 	ctx := context.WithValue(req.Context(), appContext.AdminHashKey, adminHash)
 	ctx = context.WithValue(ctx, appContext.SaltKey, salt)
 	req = req.WithContext(ctx)
@@ -71,20 +80,19 @@ func handleHttpRequest(this js.Value, args []js.Value) (resp any) {
 	rec := httptest.NewRecorder()
 	muxHandler.ServeHTTP(rec, req)
 
-	headers := make(map[string]string)
+	resHeaders := make(map[string]string)
 	for k, v := range rec.Header() {
 		if len(v) > 0 {
-			headers[k] = v[0] 
+			resHeaders[k] = v[0]
 		}
 	}
 
 	respMap := map[string]any{
 		"status":  rec.Code,
 		"body":    rec.Body.String(),
-		"headers": headers,
+		"headers": resHeaders,
 	}
 
-	// Передача KV-інструкцій з Go до JS
 	if PendingKVPut != nil {
 		respMap["kv_put"] = PendingKVPut
 	}

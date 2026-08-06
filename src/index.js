@@ -28,11 +28,17 @@ export default {
         activeSession = await env.SESSION_KV.get(`session:${sessionToken}`) || "";
       }
 
+      const headersObj = {};
+      for (const [key, value] of request.headers.entries()) {
+        headersObj[key] = value;
+      }
+
       const reqBody = await request.text();
       const reqPayload = {
         method: request.method,
         url: request.url,
         body: reqBody,
+        headers: JSON.stringify(headersObj),
         env: {
           ADMIN_HASH: env.ADMIN_HASH || "",
           SALT: env.SALT || "denysskobalo_unique_salt",
