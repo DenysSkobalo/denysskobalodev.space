@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
+	appContext "github.com/DenysSkobalo/denysskobalodev.space/internal/context"
 	"golang.org/x/crypto/pbkdf2"
 )
 
@@ -38,21 +38,20 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	adminHash, _ := r.Context().Value(contextKey("ADMIN_HASH")).(string)
+	adminHash, _ := r.Context().Value(appContext.AdminHashKey).(string)
 	if adminHash == "" {
 		adminHash = h.AdminHash
 	}
-
 	adminHash = strings.TrimSpace(adminHash)
 
-	salt, _ := r.Context().Value(contextKey("SALT")).(string)
+	salt, _ := r.Context().Value(appContext.SaltKey).(string)
 	if salt == "" {
 		salt = h.Salt
 	}
 	salt = strings.TrimSpace(salt)
 
 	if adminHash == "" {
-		respondError(w, http.StatusInternalServerError, "CONFIG_ERROR", "Server misconfiguration: missing admin secret key")
+		respondError(w, http.StatusInternalServerError, "CONFIG_ERROR", "Missing ADMIN_HASH in environment")
 		return
 	}
 

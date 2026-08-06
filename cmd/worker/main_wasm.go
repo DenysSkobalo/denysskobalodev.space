@@ -10,21 +10,9 @@ import (
 	"net/http/httptest"
 	"strings"
 	"syscall/js"
+
+	appContext "github.com/DenysSkobalo/denysskobalodev.space/internal/context"
 )
-
-type contextKey string
-
-const (
-	AdminHashKey contextKey = "ADMIN_HASH"
-	SaltKey      contextKey = "SALT"
-)
-
-type JSRequestPayload struct {
-	Method string            `json:"method"`
-	URL    string            `json:"url"`
-	Body   string            `json:"body"`
-	Env    map[string]string `json:"env"`
-}
 
 var muxHandler http.Handler
 
@@ -60,17 +48,17 @@ func handleHttpRequest(this js.Value, args []js.Value) (resp interface{}) {
 
 	if jsEnv := jsReq.Get("env"); !jsEnv.IsUndefined() && !jsEnv.IsNull() {
 		if h := jsEnv.Get("ADMIN_HASH"); !h.IsUndefined() {
-			adminHash = h.String()
+			adminHash = strings.TrimSpace(h.String())
 		}
 		if s := jsEnv.Get("SALT"); !s.IsUndefined() {
-			salt = s.String()
+			salt = strings.TrimSpace(s.String())
 		}
 	}
 
 	req := httptest.NewRequest(method, urlStr, strings.NewReader(bodyStr))
-	
-	ctx := context.WithValue(req.Context(), AdminHashKey, adminHash)
-	ctx = context.WithValue(ctx, SaltKey, salt)
+
+	ctx := context.WithValue(req.Context(), appContext.AdminHashKey, adminHash)
+	ctx = context.WithValue(ctx, appContext.SaltKey, salt)
 	req = req.WithContext(ctx)
 
 	rec := httptest.NewRecorder()
