@@ -22,10 +22,10 @@ func main() {
 	select {}
 }
 
-func handleHttpRequest(this js.Value, args []js.Value) (resp interface{}) {
+func handleHttpRequest(this js.Value, args []js.Value) (resp any) {
 	defer func() {
 		if r := recover(); r != nil {
-			errResp := map[string]interface{}{
+			errResp := map[string]any{
 				"status": 500,
 				"body":   fmt.Sprintf(`{"error":"Internal Wasm Panic","details":%q}`, fmt.Sprintf("%v", r)),
 			}
@@ -33,6 +33,10 @@ func handleHttpRequest(this js.Value, args []js.Value) (resp interface{}) {
 			resp = string(respBytes)
 		}
 	}()
+
+	PendingKVPut = nil
+	PendingKVDelete = nil
+	PrefetchedSession = ""
 
 	if len(args) == 0 {
 		return `{"status":400,"body":"{\"error\":\"Missing request payload\"}"}`
@@ -53,6 +57,9 @@ func handleHttpRequest(this js.Value, args []js.Value) (resp interface{}) {
 		if s := jsEnv.Get("SALT"); !s.IsUndefined() {
 			salt = strings.TrimSpace(s.String())
 		}
+		if as := jsEnv.Get("ACTIVE_SESSION"); !as.IsUndefined() {
+			PrefetchedSession = as.String()
+		}
 	}
 
 	req := httptest.NewRequest(method, urlStr, strings.NewReader(bodyStr))
@@ -64,9 +71,25 @@ func handleHttpRequest(this js.Value, args []js.Value) (resp interface{}) {
 	rec := httptest.NewRecorder()
 	muxHandler.ServeHTTP(rec, req)
 
-	respMap := map[string]interface{}{
-		"status": rec.Code,
-		"body":   rec.Body.String(),
+	headers := make(map[string]string)
+	for k, v := range rec.Header() {
+		if len(v) > 0 {
+			headers[k] = v[0] 
+		}
+	}
+
+	respMap := map[string]any{
+		"status":  rec.Code,
+		"body":    rec.Body.String(),
+		"headers": headers,
+	}
+
+	// Передача KV-інструкцій з Go до JS
+	if PendingKVPut != nil {
+		respMap["kv_put"] = PendingKVPut
+	}
+	if PendingKVDelete != nil {
+		respMap["kv_delete"] = PendingKVDelete
 	}
 
 	respBytes, err := json.Marshal(respMap)
